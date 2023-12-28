@@ -1,0 +1,13 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: metric
+    honor_labels: true
+    static_configs:
+      - targets: ["127.0.0.1:8889"]
+  - job_name: otel-collector
+    honor_labels: true
+    static_configs:
+      - targets: ["127.0.0.1:8888"]

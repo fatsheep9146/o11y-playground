@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: default
+data:
+  relay: |
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+      logging:
+    extensions:
+      health_check: {}
+      k8s_observer: 
+        observe_nodes: true
+    receivers:
+      receiver_creator/1:
+        watch_observers: [k8s_observer]
+        receivers:
+          kubeletstats:
+            rule: type == "k8s.node"
+            config:
+              auth_type: none
+              collection_interval: 10s
+              endpoint: '`endpoint`:10254'
+              extra_metadata_labels:
+                - container.id
+              metric_groups:
+                - container
+                - pod
+                - node
+    service:
+      telemetry:
+        logs:
+          level: debug
+          initial_fields:
+            owner: collector
+        metrics:
+          level: detailed
+          address: 0.0.0.0:8888      
+      extensions:
+      - k8s_observer
+      pipelines:
+        metrics:
+          receivers:
+          - receiver_creator/1
+          processors: {}
+          exporters:
+          - prometheus
+          - logging

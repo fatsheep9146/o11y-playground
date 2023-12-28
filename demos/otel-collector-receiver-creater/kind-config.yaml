@@ -1,0 +1,26 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  image: kindest/node:v1.27.3
+  extraPortMappings:
+  - containerPort: 8888
+    hostPort: 8888
+    protocol: TCP
+  - containerPort: 8889
+    hostPort: 8889
+    protocol: TCP
+  # for prometheus
+  - containerPort: 9090
+    hostPort: 9090
+    protocol: TCP
+  extraMounts:
+    # for prometheus
+    - hostPath: ./prometheus.yaml
+      containerPath: /etc/kubernetes/manifests/prometheus.yaml
+    - hostPath: ./prometheus-config.yaml
+      containerPath: /etc/prometheus-config.yaml
+  kubeadmConfigPatches:
+  - |
+    kind: KubeletConfiguration
+    readOnlyPort: 10254
