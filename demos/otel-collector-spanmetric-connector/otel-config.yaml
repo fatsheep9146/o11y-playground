@@ -1,0 +1,47 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:14317
+    
+processors:
+  batch: {}
+
+exporters:
+  logging:
+    verbosity: detailed
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  # prometheus:
+  #   endpoint: "0.0.0.0:8889"
+  #   enable_open_metrics: true
+  prometheusremotewrite:
+    endpoint: "http://prometheus:9090/api/v1/write"
+  
+
+connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [100us, 1ms, 2ms, 6ms, 10ms, 100ms, 250ms]
+    exemplars:
+      enabled: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [spanmetrics, otlp]
+    metrics:
+      receivers: [spanmetrics]
+      exporters: [prometheusremotewrite]
+  telemetry:
+    logs:
+      level: debug
+      initial_fields:
+        owner: collector
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888

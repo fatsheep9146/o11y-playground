@@ -1,0 +1,58 @@
+version: "3.7"
+
+services:
+  test-trace:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest
+    command: 
+    - traces
+    - --otlp-insecure
+    - --otlp-http
+    - --otlp-endpoint=opentelemetry-collector:14317
+    - --duration=36000s
+    - --rate=1
+    - --otlp-attributes=service.name="test-trace"    
+
+  opentelemetry-collector:
+    image: otel/opentelemetry-collector-contrib:0.92.0
+    command:
+      - --config=/etc/otel-config.yaml
+    volumes:
+      - ./otel-config.yaml:/etc/otel-config.yaml
+    ports:
+      - "14317:14317"
+      - "8889:8889"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.42.0
+    command: 
+    - --memory.max-traces=10000
+    environment:
+    - COLLECTOR_OTLP_ENABLED=true
+    ports:
+    - "4317:4317"
+    - "16686:16686"
+
+  prometheus:
+    image: quay.io/prometheus/prometheus:v2.43.0
+    command: 
+    - --web.console.templates=/etc/prometheus/consoles
+    - --web.console.libraries=/etc/prometheus/console_libraries
+    - --storage.tsdb.retention.time=20m
+    - --config.file=/etc/prometheus-config.yaml
+    - --storage.tsdb.path=/prometheus
+    - --web.enable-lifecycle
+    - --web.route-prefix=/
+    - --web.enable-remote-write-receiver
+    - --enable-feature=exemplar-storage
+    volumes:
+    - ./prometheus-config.yaml:/etc/prometheus-config.yaml
+    ports:
+    - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:9.1.0
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    ports:
+      - "3000:3000"

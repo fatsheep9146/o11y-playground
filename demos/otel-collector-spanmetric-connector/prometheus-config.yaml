@@ -1,0 +1,9 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 5s
+
+scrape_configs: []
+  # - job_name: metric
+  #   honor_labels: true
+  #   static_configs:
+  #     - targets: ["opentelemetry-collector:8889"]
